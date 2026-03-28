@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Snake | Arcade Edition</title>
+    <style>
+        body {
+            background-color: #0a0a0a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            color: #00ffcc;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            overflow: hidden;
+        }
+        canvas {
+            border: 5px solid #00ffcc;
+            box-shadow: 0 0 25px #00ffcc;
+            background-color: #000;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            width: 400px;
+            margin-bottom: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .instructions {
+            margin-top: 15px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>NEON SNAKE</h1>
+    <div class="stats">
+        <div>Score: <span id="scoreVal">0</span></div>
+        <div>Status: <span id="status">Playing</span></div>
+    </div>
+    
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    
+    <div class="instructions">Use ARROW KEYS to navigate</div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreElement = document.getElementById("scoreVal");
+        const statusElement = document.getElementById("status");
+
+        const box = 20;
+        let score = 0;
+        let gameActive = true;
+
+        // Initialize Snake in the middle
+        let snake = [
+            { x: 9 * box, y: 10 * box },
+            { x: 8 * box, y: 10 * box },
+            { x: 7 * box, y: 10 * box }
+        ];
+
+        // Initialize Food
+        let food = {
+            x: Math.floor(Math.random() * 19) * box,
+            y: Math.floor(Math.random() * 19) * box
+        };
+
+        // Set initial direction to RIGHT
+        let d = "RIGHT";
+
+        // Listen for keys
+        document.addEventListener("keydown", direction);
+
+        function direction(event) {
+            let key = event.keyCode;
+            if(key == 37 && d != "RIGHT") d = "LEFT";
+            else if(key == 38 && d != "DOWN") d = "UP";
+            else if(key == 39 && d != "LEFT") d = "RIGHT";
+            else if(key == 40 && d != "UP") d = "DOWN";
+        }
+
+        function collision(head, array) {
+            for(let i = 0; i < array.length; i++) {
+                if(head.x == array[i].x && head.y == array[i].y) return true;
+            }
+            return false;
+        }
+
+        function draw() {
+            if (!gameActive) return;
+
+            // Clear Canvas
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Snake
+            for(let i = 0; i < snake.length; i++) {
+                ctx.fillStyle = (i == 0) ? "#00ffcc" : "#008866";
+                ctx.fillRect(snake[i].x, snake[i].y, box, box);
+                
+                // Add border to snake segments
+                ctx.strokeStyle = "#0a0a0a";
+                ctx.strokeRect(snake[i].x, snake[i].y, box, box);
+            }
+
+            // Draw Food
+            ctx.fillStyle = "#ff0066";
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = "#ff0066";
+            ctx.fillRect(food.x, food.y, box, box);
+            ctx.shadowBlur = 0; // Reset blur for other elements
+
+            // Get old head position
+            let snakeX = snake[0].x;
+            let snakeY = snake[0].y;
+
+            // Move direction
+            if( d == "LEFT") snakeX -= box;
+            if( d == "UP") snakeY -= box;
+            if( d == "RIGHT") snakeX += box;
+            if( d == "DOWN") snakeY += box;
+
+            // Check if snake eats food
+            if(snakeX == food.x && snakeY == food.y) {
+                score++;
+                scoreElement.innerHTML = score;
+                food = {
+                    x: Math.floor(Math.random() * 19) * box,
+                    y: Math.floor(Math.random() * 19) * box
+                };
+            } else {
+                // Remove the tail
+                snake.pop();
+            }
+
+            // New Head position
+            let newHead = { x: snakeX, y: snakeY };
+
+            // Game Over Rules
+            if(snakeX < 0 || snakeX >= canvas.width || snakeY < 0 || snakeY >= canvas.height || collision(newHead, snake)) {
+                gameActive = false;
+                statusElement.innerHTML = "DEAD";
+                statusElement.style.color = "#ff0066";
+                alert("GAME OVER! Your Score: " + score);
+                location.reload(); // Restart the game
+            }
+
+            snake.unshift(newHead);
+        }
+
+        // Run the draw function every 100ms
+        let game = setInterval(draw, 100);
+    </script>
+</body>
+</html>
